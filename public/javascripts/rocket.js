@@ -64,25 +64,36 @@ var Rocket = function(){
   }
 
   var _renderItemReady = function(data){
-    _renderTemplatesByType("itemReady", {data: data});
+    _renderTemplatesForObject({data: data});
   }
 
   var _renderConnected = function(){
-    _renderTemplatesByType("connected");
+    _renderTemplatesForEvent("connected");
   }
 
-  var _renderTemplatesByType = function(type, options){
-    var templates = $("script[data-events^='" + type + "']");
+  var _renderTemplatesForObject = function(options){
+    var templates = $("script[data-events^='itemReady']");
+    _renderTemplates(templates, options, function($template, compiledTemplate){
+      _handleIdTemplates($template, compiledTemplate, options);
+    });
+  }
 
+  var _renderTemplatesForEvent = function(eventName, options){
+    var templates = $("script[data-events^='" + eventName + "']");
+    _renderTemplates(templates, options, function($template, compiledTemplate){
+      _handleQueryTemplates($template, compiledTemplate, options);
+    });
+  }
+
+  var _renderTemplates = function(templates, options, fn){
     for(var i = 0;i<templates.length; i++){
       var $template = $(templates[i]);
       var compiledTemplate = _compileTemplate($template);
-      _handleDisplayTemplates($template, compiledTemplate, options);
-      _handleQueries($template, compiledTemplate, options);
+      fn($template, compiledTemplate);
     };
   }
 
-  var _handleDisplayTemplates = function($template, compiledTemplate, options){
+  var _handleIdTemplates = function($template, compiledTemplate, options){
     options = options || {};
     var id = $template.attr("id");
     if (!id){ return; }
@@ -94,7 +105,7 @@ var Rocket = function(){
     _wireEvents($container);
   }
 
-  var _handleQueries = function($template, compiledTemplate){
+  var _handleQueryTemplates = function($template, compiledTemplate){
     var query = $template.data("query");
     if (!query){ return; }
 
