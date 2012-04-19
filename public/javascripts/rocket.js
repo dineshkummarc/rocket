@@ -3,8 +3,6 @@ var Rocket = function(){
   var _socket;
   var _repo = {};
   var _collections = [];
-  var _compiledTemplates = {};
-
 
   var _start = function(){
     _socket = io.connect();
@@ -22,19 +20,19 @@ var Rocket = function(){
     if(data.notify) _notify(data.notify);
   };
 
-  var _compileTemplate = function(id){
-    var compiled = _compiledTemplates[id];
-
-    if (!compiled){
-      var source = $(id).html();
-      compiled = Handlebars.compile(source);
-      _compiledTemplates[id] = compiled;
-    }
-
+  var _compileTemplate = function(template){
+    var source = template.html();
+    compiled = Handlebars.compile(source);
     return compiled;
   };
 
-  var _handleFormSubmission = function(container){
+  var _wireEvents = function(container){
+    container.find(".rocket-form").each(_handleFormSubmission);
+    container.find(".rocket-selector").each(_handleItemClick);
+  }
+
+  var _handleFormSubmission = function(){
+    var container = $(this);
     container.on("submit", function(evt){
       evt.preventDefault();
       var form = $(evt.currentTarget);
@@ -47,16 +45,8 @@ var Rocket = function(){
     });
   };
 
-  var _wireEvents = function(container){
-    var $form = container.find(".rocket-form");
-    if($form.length > 0) _handleFormSubmission($form);
-
-    var $link = container.find(".rocket-selector");
-    if($link.length > 0) _handleItemClick($link);
-  }
-
-  var _handleItemClick = function(container){
-    //load up the click events
+  var _handleItemClick = function(){
+    var container = $(this);
     container.on("click", function(evt){
       evt.preventDefault();
       
@@ -69,25 +59,34 @@ var Rocket = function(){
   }
 
   var _renderUpdates = function(data){
-    _renderTemplatesByType("itemUpdated");
     _notify("Updated " + data);
     alert(data);
   }
 
   var _renderItemReady = function(data){
-    _renderTemplatesByType("itemReady");
+    _renderTemplatesByType("itemReady", data);
   }
 
-  var _renderTemplatesByType = function(type){
+  var _renderTemplatesByType = function(type, data){
     var templates = $("script[data-events^='" + type + "']");
-    for(var i = 0;i<templates.length; i++){
-      var id = $(templates[i]).attr("id");
-      var containerName = "#" + id + "Container";
 
-      var compiledTemplate = _compileTemplate(templates[i]);
-      var container = $(containerName).html(compiledTemplate({item : data}));
-      _wireEvents(container);
+    for(var i = 0;i<templates.length; i++){
+      var $template = $(templates[i]);
+      var id = $template.attr("id");
+      var compiledTemplate = _compileTemplate($template);
+      var html = compiledTemplate({item : data});
+
+      var $container = _getContainer(id);
+
+      $container.html(html);
+      _wireEvents($container);
     };
+  }
+
+  var _getContainer = function(id){
+    var containerName = "#" + id + "Container";
+    var container = $(containerName);
+    return container;
   }
 
   var _renderConnected = function(){
@@ -95,10 +94,11 @@ var Rocket = function(){
       
     for(var i = 0;i<templates.length; i++){
       
-      var query = $(templates[i]).data("query");
+      var $template = $(templates[i]);
+      var query = $template.data("query");
       var containerName = query + "Container";
 
-      var compiledTemplate = _compileTemplate(templates[i])
+      var compiledTemplate = _compileTemplate($template);
 
       _socket.emit("collectionRequested", query, function(data) {
         
