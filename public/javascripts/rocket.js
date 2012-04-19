@@ -64,23 +64,41 @@ var Rocket = function(){
   }
 
   var _renderItemReady = function(data){
-    _renderTemplatesByType("itemReady", data);
+    _renderTemplatesByType("itemReady", function($template, compiledTemplate){
+
+      var id = $template.attr("id");
+      var html = compiledTemplate({item : data});
+      var $container = _getContainer(id);
+
+      $container.html(html);
+      _wireEvents($container);
+    });
   }
 
-  var _renderTemplatesByType = function(type, data){
+  var _renderConnected = function(){
+    _renderTemplatesByType("connected", function($template, compiledTemplate){
+
+      var query = $template.data("query");
+      var container = _getContainer(query);
+
+      _socket.emit("collectionRequested", query, function(data) {
+        
+        var html = compiledTemplate({items : data});
+        container.html(html);
+        _wireEvents(container);
+
+      });
+    });
+      
+  }
+
+  var _renderTemplatesByType = function(type, fn){
     var templates = $("script[data-events^='" + type + "']");
 
     for(var i = 0;i<templates.length; i++){
       var $template = $(templates[i]);
-      var id = $template.attr("id");
-
       var compiledTemplate = _compileTemplate($template);
-      var html = compiledTemplate({item : data});
-
-      var $container = _getContainer(id);
-      $container.html(html);
-
-      _wireEvents($container);
+      fn($template, compiledTemplate);
     };
   }
 
@@ -88,27 +106,6 @@ var Rocket = function(){
     var containerName = "#" + id + "Container";
     var container = $(containerName);
     return container;
-  }
-
-  var _renderConnected = function(){
-    var templates = $("script[data-events^='connected']");
-      
-    for(var i = 0;i<templates.length; i++){
-      
-      var $template = $(templates[i]);
-      var query = $template.data("query");
-      var containerName = query + "Container";
-
-      var compiledTemplate = _compileTemplate($template);
-
-      _socket.emit("collectionRequested", query, function(data) {
-        
-        var container = $("#" + containerName).html(compiledTemplate({items : data}));
-        _wireEvents(container);
-
-      });
-    };
-
   }
 
  return {
