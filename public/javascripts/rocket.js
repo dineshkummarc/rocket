@@ -3,6 +3,7 @@ var Rocket = function(){
   var _socket;
   var _repo = {};
   var _collections = [];
+  var _compiledTemplates = {};
 
 
   var _start = function(){
@@ -22,8 +23,15 @@ var Rocket = function(){
   };
 
   var _compileTemplate = function(id){
+    var compiled = _compiledTemplates[id];
+
+    if (!compiled){
       var source = $(id).html();
-      return Handlebars.compile(source);
+      compiled = Handlebars.compile(source);
+      _compiledTemplates[id] = compiled;
+    }
+
+    return compiled;
   };
 
   var _handleFormSubmission = function(container){
@@ -61,12 +69,17 @@ var Rocket = function(){
   }
 
   var _renderUpdates = function(data){
+    _renderTemplatesByType("itemUpdated");
     _notify("Updated " + data);
     alert(data);
   }
 
   var _renderItemReady = function(data){
-    var templates = $("script[data-events^='itemReady']");
+    _renderTemplatesByType("itemReady");
+  }
+
+  var _renderTemplatesByType = function(type){
+    var templates = $("script[data-events^='" + type + "']");
     for(var i = 0;i<templates.length; i++){
       var id = $(templates[i]).attr("id");
       var containerName = "#" + id + "Container";
