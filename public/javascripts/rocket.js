@@ -59,8 +59,8 @@ var Rocket = function(){
   }
 
   var _renderUpdates = function(data){
-    _renderTemplatesByType("itemUpdated", data);
     _notify("Updated " + data);
+    alert('update');
   }
 
   var _renderItemReady = function(data){
