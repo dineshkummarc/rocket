@@ -10,6 +10,7 @@ var Rocket = function(){
     _socket.on("message", _handleMessage);
     _socket.on("connect", _renderConnected);    
     _socket.on("itemReady", _renderItemReady);
+    _socket.on("itemUpdated", _renderUpdates);
   };
 
   var _notify = function(message){
@@ -21,7 +22,6 @@ var Rocket = function(){
   };
 
   var _compileTemplate = function(id){
-
       var source = $(id).html();
       return Handlebars.compile(source);
   };
@@ -34,9 +34,7 @@ var Rocket = function(){
       var action = form.attr("action");
       var data = form.serialize();
 
-      _socket.emit("formSubmitted", {action: action, data: data}, function(data){
-        _notify("Form posted " + data);
-      });
+      _socket.emit("formSubmitted", {action: action, data: data});
 
     });
   };
@@ -60,6 +58,11 @@ var Rocket = function(){
       _socket.emit("itemRequested", {query: query, id: id});
 
     });
+  }
+
+  var _renderUpdates = function(data){
+    _notify("Updated " + data);
+    alert(data);
   }
 
   var _renderItemReady = function(data){
