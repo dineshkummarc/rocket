@@ -59,8 +59,9 @@ var Rocket = function(){
   }
 
   var _renderUpdates = function(data){
+    _renderTemplatesByType("itemUpdated", data);
+    console.log(data);
     _notify("Updated " + data);
-    alert(data);
   }
 
   var _renderItemReady = function(data){
@@ -73,12 +74,13 @@ var Rocket = function(){
     for(var i = 0;i<templates.length; i++){
       var $template = $(templates[i]);
       var id = $template.attr("id");
+
       var compiledTemplate = _compileTemplate($template);
       var html = compiledTemplate({item : data});
 
       var $container = _getContainer(id);
-
       $container.html(html);
+
       _wireEvents($container);
     };
   }

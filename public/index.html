@@ -27,14 +27,13 @@
     
     <script id="singleProduct" type="x-handlebars" data-events="itemReady">
       <form action="updateProduct" class="rocket-form">
-       <input type = "hidden" name="broadcast" value = "true" />
         <p>
           <label>Title</label>
-          <input id="title" value ="{{item.title}}"/>
+          <input id="title" name="title" value ="{{item.title}}"/>
         </p>
         <p>
           <label>Price</label>
-          <input id="price"  value ="{{item.price}}" />
+          <input id="price" name="price" value ="{{item.price}}" />
         </p>
         <p>
           <input type="submit" value = "go">
