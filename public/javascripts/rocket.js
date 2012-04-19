@@ -60,7 +60,6 @@ var Rocket = function(){
 
   var _renderUpdates = function(data){
     _renderTemplatesByType("itemUpdated", data);
-    console.log(data);
     _notify("Updated " + data);
   }
 
