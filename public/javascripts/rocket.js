@@ -64,42 +64,48 @@ var Rocket = function(){
   }
 
   var _renderItemReady = function(data){
-    _renderTemplatesByType("itemReady", function($template, compiledTemplate){
-
-      var id = $template.attr("id");
-      var html = compiledTemplate({item : data});
-      var $container = _getContainer(id);
-
-      $container.html(html);
-      _wireEvents($container);
-    });
+    _renderTemplatesByType("itemReady", {data: data});
   }
 
   var _renderConnected = function(){
-    _renderTemplatesByType("connected", function($template, compiledTemplate){
-
-      var query = $template.data("query");
-      var container = _getContainer(query);
-
-      _socket.emit("collectionRequested", query, function(data) {
-        
-        var html = compiledTemplate({items : data});
-        container.html(html);
-        _wireEvents(container);
-
-      });
-    });
-      
+    _renderTemplatesByType("connected");
   }
 
-  var _renderTemplatesByType = function(type, fn){
+  var _renderTemplatesByType = function(type, options){
     var templates = $("script[data-events^='" + type + "']");
 
     for(var i = 0;i<templates.length; i++){
       var $template = $(templates[i]);
       var compiledTemplate = _compileTemplate($template);
-      fn($template, compiledTemplate);
+      _handleDisplayTemplates($template, compiledTemplate, options);
+      _handleQueries($template, compiledTemplate, options);
     };
+  }
+
+  var _handleDisplayTemplates = function($template, compiledTemplate, options){
+    options = options || {};
+    var id = $template.attr("id");
+    if (!id){ return; }
+
+    var $container = _getContainer(id);
+
+    var html = compiledTemplate({item: options.data});
+    $container.html(html);
+    _wireEvents($container);
+  }
+
+  var _handleQueries = function($template, compiledTemplate){
+    var query = $template.data("query");
+    if (!query){ return; }
+
+    _socket.emit("collectionRequested", query, function(data) {
+      
+      var html = compiledTemplate({items : data});
+      var container = _getContainer(query);
+      container.html(html);
+      _wireEvents(container);
+
+    });
   }
 
   var _getContainer = function(id){
