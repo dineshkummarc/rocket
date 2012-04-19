@@ -8,50 +8,43 @@
   <script src="/javascripts/handlebars-min.js" type="text/javascript"></script>
   <script src="/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="/javascripts/rocket.js" type="text/javascript"></script>
-
   <script>
-  $().ready(function(){
 
-    Rocket.initCollection("product");
-    Rocket.start();
-    
-  });
   </script>
+
   <body>
     <div class="container" style = "margin-top:36px">
 
-      <div id="notifier" class="alert alert-info">
+      <div id="notifier" class="alert alert-info" >
         <a class="close" data-dismiss="alert" href="#">&times;</a>
       </div>
       <h1>Products</h1>
 
-      <div id="productDefaultContainer">
+      <div id="allProductsContainer"></div>
+      <div id="singleProductContainer"></div>
 
-      </div>
-
-      <div id="productBlahContainer">
-
-      </div>
-
-      <form id="productForm">
+    </div>
+    
+    <script id = "singleProduct" type="x-handlebars" data-events = "itemReady">
+       <input type = "hidden" name="broadcast" value = "true" />
         <p>
           <label>Title</label>
-          <input id="title" />
+          <input id="title" value ="{{item.title}}"/>
         </p>
         <p>
           <label>Price</label>
-          <input id="price" />
+          <input id="price"  value ="{{item.price}}" />
         </p>
         <p>
           <input type="submit" value = "go">
         </p>
       </form>
-    </div>
+    </script>
 
-    <script class="productListTemplate" id = "productDefaultTemplate", type="x-handlebars">
-      <ul class="product-list">
+    <script data-query = "allProducts" type="x-handlebars" data-events = "connected,itemUpdated">
+      <ul class="item-list">
         {{#each items}}
-        <li><a href="#" data-id="{{id}}" class="selector">{{title}}</a></li>
+        <li><a href="singleProduct" data-id="{{id}}" class="rocket-selector">{{title}}</a></li>
         {{/each}}
       </ul>
     </script>

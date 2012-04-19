@@ -7,9 +7,19 @@ var express = require('express')
   , routes = require('./routes');
 
 var app = module.exports = express.createServer();
-// Configuration
-var rocket = require("./lib/rocket.io").listen(app);
-//console.log(rocket);
+
+var product = require("./lib/product");
+
+
+var api = {
+  allProducts : product.all,
+  singleProduct : product.find,
+  updateProduct : product.save
+}
+
+
+var rocket = require("./lib/rocket.io")
+  .listen(app, api);
 
 
 app.configure(function(){
@@ -37,9 +47,5 @@ app.listen(3000, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
 
-rocket.on("collectionRequested", function(data){
-  var product = require("./lib/" + data.collectionName);
-  data.returns(product.all());
-})
 
 

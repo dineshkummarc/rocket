@@ -4,58 +4,103 @@ var Rocket = function(){
   var _repo = {};
   var _collections = [];
 
+
   var _start = function(){
     _socket = io.connect();
     _socket.on("message", _handleMessage);
-    
-    for(var i = 0; i < _collections.length; i++){
-      console.log("Hi I'm "+ _collections[i]);
-      _bob(_collections[i]);
-    }
-    
+    _socket.on("connect", _renderConnected);    
+    _socket.on("itemReady", _renderItemReady);
   };
+
+  var _notify = function(message){
+    $("#notifier").html(message);
+  }
 
   var _handleMessage = function(data){
-    if(data.notify) $("#notifier").html(data.notify);
+    if(data.notify) _notify(data.notify);
   };
 
-  var _initCollection = function(modelName){
-      console.log("Adding " + modelName);
-      _collections.push(modelName);
+  var _compileTemplate = function(id){
 
+      var source = $(id).html();
+      return Handlebars.compile(source);
   };
 
-  var _bob = function(modelName){
-  
-    var templates = $("." + modelName + "ListTemplate");
-    
-    _socket.emit("collectionRequested", modelName, function(data){
+  var _handleFormSubmission = function(container){
+    container.on("submit", function(evt){
+      alert("Hi")
+      evt.preventDefault();
+      var form = $(evt.currentTarget);
       
-      _repo[modelName] = data;
+      var action = form.attr("action");
+      var data = form.serialize();
 
-      for(var i = 0;i<templates.length; i++){
-        var source = $(templates[i]).html();
-        var template = Handlebars.compile(source);
-        var containerTemplate = $(templates[i]).attr("id").replace("Template", "Container");
-        var containerSelector = "#" + containerTemplate;
-        var container = $(containerSelector).html(template({items : data}));
+      _socket.emit("formSubmitted", {action: action, data: data}, function(data){
+        _notify("Form posted " + data);
+      });
+
+    });
+  };
+
+  var _wireEvents = function(container){
+    var $form = container.find(".rocket-form");
+    if($form.length > 0) _handleFormSubmission($form);
+
+    var $link = container.find(".rocket-selector");
+    if($link.length > 0) _handleItemClick($link);
+  }
+
+  var _handleItemClick = function(container){
+    //load up the click events
+    container.on("click", function(evt){
+      evt.preventDefault();
       
-        container.on("click", "." + modelName + "-list .selector", function(evt){
-          evt.preventDefault();
-          //alert("hi");
-          var id = $(evt.currentTarget).data("id");
-          alert(id);
-        });
+      var id = $(evt.currentTarget).data("id");
+      var query = $(evt.currentTarget).attr("href");
+      
+      _socket.emit("itemRequested", {query: query, id: id});
 
-      };
     });
   }
 
+  var _renderItemReady = function(data){
+    var templates = $("script[data-event='itemReady']");
+    for(var i = 0;i<templates.length; i++){
+      var id = $(templates[i]).attr("id");
+      var containerName = "#" + id + "Container";
+
+      var compiledTemplate = _compileTemplate(templates[i]);
+      var container = $(containerName).html(compiledTemplate({item : data}));
+      _wireEvents(container);
+    };
+  }
+
+  var _renderConnected = function(){
+
+    var templates = $("script[data-event='connected']");
+      
+    for(var i = 0;i<templates.length; i++){
+      
+      var query = $(templates[i]).data("query");
+      var containerName = query + "Container";
+
+      var compiledTemplate = _compileTemplate(templates[i])
+
+      _socket.emit("collectionRequested", query, function(data) {
+        
+        var container = $("#" + containerName).html(compiledTemplate({items : data}));
+        _wireEvents(container);
+
+      });
+    };
+
+  }
+
  return {
-    initCollection : _initCollection,
-    repo : _repo,
     start : _start
   }
 
 }();
-
+$().ready(function(){
+  Rocket.start();
+});
