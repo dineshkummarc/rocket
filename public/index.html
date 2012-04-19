@@ -26,6 +26,7 @@
     </div>
     
     <script id = "singleProduct" type="x-handlebars" data-events = "itemReady">
+      <form class="rocket-form">
        <input type = "hidden" name="broadcast" value = "true" />
         <p>
           <label>Title</label>
@@ -41,7 +42,7 @@
       </form>
     </script>
 
-    <script data-query = "allProducts" type="x-handlebars" data-events = "connected,itemUpdated">
+    <script data-query = "allProducts" type="x-handlebars" data-events = "connected itemUpdated">
       <ul class="item-list">
         {{#each items}}
         <li><a href="singleProduct" data-id="{{id}}" class="rocket-selector">{{title}}</a></li>

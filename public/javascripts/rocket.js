@@ -28,7 +28,6 @@ var Rocket = function(){
 
   var _handleFormSubmission = function(container){
     container.on("submit", function(evt){
-      alert("Hi")
       evt.preventDefault();
       var form = $(evt.currentTarget);
       
@@ -64,7 +63,7 @@ var Rocket = function(){
   }
 
   var _renderItemReady = function(data){
-    var templates = $("script[data-event='itemReady']");
+    var templates = $("script[data-events^='itemReady']");
     for(var i = 0;i<templates.length; i++){
       var id = $(templates[i]).attr("id");
       var containerName = "#" + id + "Container";
@@ -76,8 +75,7 @@ var Rocket = function(){
   }
 
   var _renderConnected = function(){
-
-    var templates = $("script[data-event='connected']");
+    var templates = $("script[data-events^='connected']");
       
     for(var i = 0;i<templates.length; i++){
       
