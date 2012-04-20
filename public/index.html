@@ -9,6 +9,13 @@
   <script src="/socket.io/socket.io.js" type="text/javascript"></script>
   <script src="/javascripts/rocket.js" type="text/javascript"></script>
   <script>
+  $().ready(function(){
+    Rocket.hookupEvents({
+      "getProductionsReady" : "productionListTemplate",
+      "getProductionReady" : "productionTemplate"
+    });
+    Rocket.start("getProductions");
+  });
 
   </script>
 
@@ -18,15 +25,20 @@
       <div id="notifier" class="alert alert-info" >
         <a class="close" data-dismiss="alert" href="#">&times;</a>
       </div>
-      <h1>Products</h1>
+      
+      <div class = "span6">
+        <h1>Products</h1>
+        <div id="productionListContainer"></div>
+      </div>
 
-      <div id="allProductsContainer"></div>
-      <div id="singleProductContainer"></div>
-
+      <div class = "span5">
+        <div id="productionContainer"></div>
+      </div>
     </div>
     
-    <script id="singleProduct" type="x-handlebars" data-events="itemReady">
-      <form action="updateProduct" class="rocket-form">
+    <script id="productionTemplate" type="x-handlebars">
+      <form action="updateProduction" class="rocket-form" data-broadcast = "getProductions">
+        <input type = "hidden" id="id" name="id" value ="{{item.id}}"/>
         <p>
           <label>Title</label>
           <input id="title" name="title" value ="{{item.title}}"/>
@@ -41,10 +53,10 @@
       </form>
     </script>
 
-    <script data-query="allProducts" type="x-handlebars" data-events="connected itemUpdated">
+    <script id="productionListTemplate" type="x-handlebars">
       <ul class="item-list">
         {{#each items}}
-        <li><a href="singleProduct" data-id="{{id}}" class="rocket-selector">{{title}}</a></li>
+        <li><a href="getProduction" data-id="{{id}}" class="rocket-selector">{{title}}</a></li>
         {{/each}}
       </ul>
     </script>

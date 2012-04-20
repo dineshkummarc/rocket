@@ -5,16 +5,16 @@
 
 var express = require('express')
   , routes = require('./routes');
-
+var mongoose = require("mongoose");
 var app = module.exports = express.createServer();
 
-var product = require("./lib/product");
+var productions = require("./lib/productions");
 
 
 var api = {
-  allProducts : product.all,
-  singleProduct : product.find,
-  updateProduct : product.save
+  getProductions : productions.all,
+  getProduction : productions.findById,
+  updateProduction : productions.save
 }
 
 
@@ -32,11 +32,21 @@ app.configure(function(){
 });
 
 app.configure('development', function(){
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
+  //db = new Mongo('tekpub', new Server("localhost", Connection.DEFAULT_PORT, {}), {native_parser:true});
+  mongoose.connect('mongodb://localhost/tekpub');  
+});
+
+app.configure('test', function(){
+  app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
+  //db = new Mongo('tekpub_test', new Server("localhost", Connection.DEFAULT_PORT, {}), {native_parser:true});
+  mongoose.connect('mongodb://localhost/tekpub');  
 });
 
 app.configure('production', function(){
-  app.use(express.errorHandler());
+  app.use(express.errorHandler()); 
+  mongoose.connect('mongodb://localhost/tekpub');  
+  //db = new Mongo('tekpub', new Server("localhost", Connection.DEFAULT_PORT, {}), {native_parser:true});
 });
 
 // Routes

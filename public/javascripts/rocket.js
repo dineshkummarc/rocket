@@ -3,21 +3,70 @@ var Rocket = function(){
   var _socket;
   var _repo = {};
   var _collections = [];
+  var _eventList = [];
 
-  var _start = function(){
-    _socket = io.connect();
-    _socket.on("message", _handleMessage);
-    _socket.on("connect", _renderConnected);    
-    _socket.on("itemReady", _renderItemReady);
-    _socket.on("itemUpdated", _renderUpdates);
+  var _events = function(list){
+    _eventList = list;
   };
 
-  var _notify = function(message){
-    $("#notifier").html(message);
+
+  var _start = function(fireEvent){
+    _socket = io.connect();
+    _socket.on("message", _handleMessage);
+    //_socket.on("connect", _renderConnected);    
+    //_socket.on("itemReady", _renderItemReady);
+    //_socket.on("itemUpdated", _renderUpdates);
+    for (var ev in _eventList) {
+      _socket.on(ev, _renderTemplate)
+    };
+
+    if(fireEvent){
+      _socket.emit("rocketEvent",{eventName : fireEvent});
+    }
+
+  };
+  var _renderTemplate = function(data){
+    //the eventName is returned to us
+    //look up in the list
+    var templateName = _eventList[data.eventName];
+
+    console.log(data.items);
+    var containerName = templateName.replace("Template","Container");
+    console.log(containerName);
+
+    if(!templateName){
+      console.log("Can't find a template with the name " + templateName);
+    }
+    var template = $("#" + templateName);
+    var container = $("#" + containerName);
+
+    if(container.length === 0){
+      console.log("Looking for " + containerName + " and can't find it...");
+    }
+    
+    //so render already!
+    var compiled = _compileTemplate(template);
+    container.html(compiled(data));
+    
+    //and wire the events
+    _wireEvents(container);
   }
 
   var _handleMessage = function(data){
-    if(data.notify) _notify(data.notify);
+    console.log(data);
+    $notifier = $("#notifier");
+    if(data.info){
+      $notifier.html(data.info);
+      $notifier.attr("class","alert alert-info");
+    }else if(data.warn){
+      $notifier.html(data.warn);
+      $notifier.attr("class","alert alert-warn");
+    }else if(data.alert){
+      $notifier.html(data.alert);
+      $notifier.attr("class","alert alert-error");     
+    }
+    //if(data.notify) 
+    //else if (data.warn) _warn()
   };
 
   var _compileTemplate = function(template){
@@ -38,13 +87,29 @@ var Rocket = function(){
       var form = $(evt.currentTarget);
       
       var action = form.attr("action");
-      var data = form.serialize();
-
-      _socket.emit("formSubmitted", {action: action, data: data});
+      var data = _serializeObject(form);
+      var broadcastEvent = form.data("broadcast");
+      
+      _socket.emit("rocketEvent", {eventName: action, data: data, broadcastEvent : broadcastEvent});
 
     });
   };
-
+  var _serializeObject = function(form)
+  {
+     var o = {};
+     var a = form.serializeArray();
+     $.each(a, function() {
+         if (o[this.name]) {
+             if (!o[this.name].push) {
+                 o[this.name] = [o[this.name]];
+             }
+             o[this.name].push(this.value || '');
+         } else {
+             o[this.name] = this.value || '';
+         }
+     });
+     return o;
+  };
   var _handleItemClick = function(){
     var container = $(this);
     container.on("click", function(evt){
@@ -53,7 +118,7 @@ var Rocket = function(){
       var id = $(evt.currentTarget).data("id");
       var query = $(evt.currentTarget).attr("href");
       
-      _socket.emit("itemRequested", {query: query, id: id});
+      _socket.emit("rocketEvent", {eventName: query, data: id});
 
     });
   }
@@ -126,10 +191,9 @@ var Rocket = function(){
   }
 
  return {
-    start : _start
+    start : _start, 
+    hookupEvents : _events
   }
 
 }();
-$().ready(function(){
-  Rocket.start();
-});
+
